@@ -61,3 +61,4 @@ src/
 - Tailwind CSS (custom theme: colors, fonts, animations in `tailwind.config.js`)
 - Cart persistence via `localStorage` (no backend required — wire up a real API/payment
   gateway in `Checkout.jsx`'s `handlePlaceOrder` when you're ready to go live)
+# shop-website
