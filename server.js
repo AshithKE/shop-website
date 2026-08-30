@@ -133,8 +133,133 @@ function emitCatalogUpdate(eventName, payload) {
   io.emit(eventName, payload)
 }
 
+const CUSTOMERS_FILE = 'customers.json'
+
+async function getCustomers() {
+  try {
+    const raw = await fs.readFile(path.join(dataDir, CUSTOMERS_FILE), 'utf8')
+    return JSON.parse(raw) || []
+  } catch {
+    return []
+  }
+}
+
+async function saveCustomers(customers) {
+  await fs.writeFile(path.join(dataDir, CUSTOMERS_FILE), JSON.stringify(customers, null, 2))
+}
+
+function generateToken(customerId) {
+  return Buffer.from(`${customerId}:${Date.now()}:${Math.random()}`).toString('base64')
+}
+
+function verifyToken(token) {
+  if (!token) return null
+  const parts = Buffer.from(token, 'base64').toString().split(':')
+  return parts[0] || null
+}
+
+const requireCustomerAuth = (req, res, next) => {
+  const auth = req.headers.authorization || ''
+  const token = auth.replace('Bearer ', '')
+  const customerId = verifyToken(token)
+  if (!customerId) {
+    return res.status(401).json({ message: 'Unauthorized' })
+  }
+  req.customerId = customerId
+  next()
+}
+
 app.get('/api/config', (req, res) => {
   res.json({ keyId: process.env.RAZORPAY_KEY_ID || '' })
+})
+
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password required' })
+    }
+    const customers = await getCustomers()
+    if (customers.find((c) => c.email === email)) {
+      return res.status(400).json({ message: 'Email already registered' })
+    }
+    const customerId = `customer_${Date.now()}`
+    const customer = { id: customerId, name, email, phone, password }
+    customers.push(customer)
+    await saveCustomers(customers)
+    const token = generateToken(customerId)
+    res.status(201).json({
+      token,
+      user: { id: customerId, name, email, phone },
+    })
+  } catch (error) {
+    res.status(500).json({ message: 'Registration failed', error: error.message })
+  }
+})
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, password } = req.body
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password required' })
+    }
+    const customers = await getCustomers()
+    const customer = customers.find((c) => c.email === email && c.password === password)
+    if (!customer) {
+      return res.status(401).json({ message: 'Invalid email or password' })
+    }
+    const token = generateToken(customer.id)
+    res.json({
+      token,
+      user: { id: customer.id, name: customer.name, email: customer.email, phone: customer.phone },
+    })
+  } catch (error) {
+    res.status(500).json({ message: 'Login failed', error: error.message })
+  }
+})
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { email, newPassword } = req.body
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'Email and new password required' })
+    }
+    const customers = await getCustomers()
+    const customer = customers.find((c) => c.email === email)
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' })
+    }
+    customer.password = newPassword
+    await saveCustomers(customers)
+    res.json({ message: 'Password reset successful' })
+  } catch (error) {
+    res.status(500).json({ message: 'Password reset failed', error: error.message })
+  }
+})
+
+app.get('/api/customer/profile', requireCustomerAuth, async (req, res) => {
+  try {
+    const customers = await getCustomers()
+    const customer = customers.find((c) => c.id === req.customerId)
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' })
+    }
+    res.json({
+      user: { id: customer.id, name: customer.name, email: customer.email, phone: customer.phone },
+    })
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to load profile', error: error.message })
+  }
+})
+
+app.get('/api/customer/orders', requireCustomerAuth, async (req, res) => {
+  try {
+    const orders = await readJson('orders.json', [])
+    const customerOrders = orders.filter((o) => o.customerId === req.customerId)
+    res.json(customerOrders)
+  } catch (error) {
+    res.status(500).json({ message: 'Unable to load orders', error: error.message })
+  }
 })
 
 app.get('/api/catalog', async (req, res) => {
@@ -307,11 +432,12 @@ app.get('/api/orders/:id', async (req, res) => {
   }
 })
 
-app.post('/api/orders', async (req, res) => {
+app.post('/api/orders', requireCustomerAuth, async (req, res) => {
   try {
     const orders = await readJson('orders.json', [])
     const order = {
       ...req.body,
+      customerId: req.customerId,
       createdAt: req.body.createdAt || new Date().toISOString(),
       orderId: req.body.orderId || `PH-${Date.now().toString().slice(-6)}`,
       status: req.body.status || 'Pending',

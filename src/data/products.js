@@ -181,7 +181,7 @@ const defaultProducts = [
   },
 ]
 
-export const PRODUCT_STORAGE_KEY = 'philo_admin_products_v1'
+export const PRODUCT_STORAGE_KEY = 'philo_admin_products_v2'
 export let products = [...defaultProducts]
 
 export function syncProductsFromStorage() {

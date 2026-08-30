@@ -1,0 +1,64 @@
+[
+  {
+    "id": "vanilla-cake",
+    "name": "Vanilla Cake",
+    "category": "classic",
+    "description": "Classic vanilla sponge with soft cream frosting.",
+    "ingredients": [
+      "Vanilla",
+      "Flour",
+      "Butter",
+      "Cream"
+    ],
+    "price": 300,
+    "stock": 25,
+    "discount": 0,
+    "rating": 4.8,
+    "reviews": 120,
+    "bestSeller": true,
+    "image": "https://images.unsplash.com/photo-1559620192-032c4bc4674e?auto=format&fit=crop&w=900&q=80",
+    "sizes": [
+      {
+        "id": "0.5kg",
+        "label": "0.5 KG",
+        "price": 300
+      },
+      {
+        "id": "1kg",
+        "label": "1 KG",
+        "price": 550
+      }
+    ]
+  },
+  {
+    "id": "chocolate-cake",
+    "name": "Chocolate Cake",
+    "category": "classic",
+    "description": "Rich chocolate sponge layered with decadent chocolate cream.",
+    "ingredients": [
+      "Chocolate",
+      "Flour",
+      "Butter",
+      "Cream"
+    ],
+    "price": 400,
+    "stock": 18,
+    "discount": 0,
+    "rating": 4.9,
+    "reviews": 140,
+    "bestSeller": true,
+    "image": "https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=900&q=80",
+    "sizes": [
+      {
+        "id": "0.5kg",
+        "label": "0.5 KG",
+        "price": 400
+      },
+      {
+        "id": "1kg",
+        "label": "1 KG",
+        "price": 750
+      }
+    ]
+  }
+]

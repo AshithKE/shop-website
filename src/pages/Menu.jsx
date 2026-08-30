@@ -150,10 +150,64 @@ export default function Menu() {
         </p>
 
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 max-w-6xl mx-auto">
-            {filtered.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
+          <div className="max-w-5xl mx-auto overflow-hidden rounded-[28px] border border-cream-line bg-white shadow-card">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-left">
+                <thead className="bg-cream-deep text-cocoa/80">
+                  <tr>
+                    <th className="px-5 py-4 text-sm font-semibold uppercase tracking-[0.12em]">Cake</th>
+                    <th className="px-5 py-4 text-sm font-semibold uppercase tracking-[0.12em] text-center">
+                      ½ KG
+                    </th>
+                    <th className="px-5 py-4 text-sm font-semibold uppercase tracking-[0.12em] text-center">
+                      1 KG
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((p, index) => {
+                    const halfKg = p.sizes?.find((size) => size.id === '0.5kg') || p.sizes?.[0]
+                    const oneKg = p.sizes?.find((size) => size.id === '1kg') || p.sizes?.[1] || p.sizes?.[0]
+
+                    return (
+                      <tr
+                        key={p.id}
+                        className={index % 2 === 0 ? 'bg-white' : 'bg-cream/40'}
+                      >
+                        <td className="px-5 py-4 align-middle">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-100 to-amber-100 flex items-center justify-center text-xl shadow-sm">
+                              🎂
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-cocoa">{p.name}</span>
+                                {p.bestSeller && (
+                                  <span className="rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-amber-700">
+                                    Best Seller
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-cocoa/55 mt-1">{p.description}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 text-center align-middle">
+                          <span className="inline-flex items-center justify-center rounded-full bg-cream px-3 py-1.5 text-sm font-semibold text-cocoa shadow-sm">
+                            ₹{halfKg?.price ?? p.price}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-center align-middle">
+                          <span className="inline-flex items-center justify-center rounded-full bg-choc px-3 py-1.5 text-sm font-semibold text-white shadow-sm">
+                            ₹{oneKg?.price ?? p.price}
+                          </span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
           <div className="text-center py-24">

@@ -1,15 +1,28 @@
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import StarRating from './StarRating'
 import { useCart } from '../context/CartContext'
+import { getCustomerSession } from '../utils/customerAuth'
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart()
+  const navigate = useNavigate()
   const [added, setAdded] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(!!getCustomerSession())
   const defaultSize = product.sizes[0]
+
+  useEffect(() => {
+    const onAuthChanged = () => setIsLoggedIn(!!getCustomerSession())
+    window.addEventListener('customer-auth-changed', onAuthChanged)
+    return () => window.removeEventListener('customer-auth-changed', onAuthChanged)
+  }, [])
 
   const handleQuickAdd = (e) => {
     e.preventDefault()
+    if (!isLoggedIn) {
+      navigate('/login?redirect=/shop')
+      return
+    }
     addItem({
       productId: product.id,
       name: product.name,
@@ -48,7 +61,7 @@ export default function ProductCard({ product }) {
             added ? 'bg-pista text-cocoa' : 'bg-cream text-choc hover:bg-choc hover:text-cream'
           } translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100`}
           aria-label={`Quick add ${product.name} to cart`}
-          title="Quick add to cart"
+          title={isLoggedIn ? 'Quick add to cart' : 'Login to add to cart'}
         >
           {added ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">

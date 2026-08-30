@@ -1,6 +1,25 @@
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { getCustomerSession } from '../utils/customerAuth'
 
 export default function Hero() {
+  const [isLoggedIn, setIsLoggedIn] = useState(!!getCustomerSession())
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const onAuthChanged = () => setIsLoggedIn(!!getCustomerSession())
+    window.addEventListener('customer-auth-changed', onAuthChanged)
+    return () => window.removeEventListener('customer-auth-changed', onAuthChanged)
+  }, [])
+
+  const handleOrderNow = () => {
+    if (isLoggedIn) {
+      navigate('/shop')
+    } else {
+      navigate('/login?redirect=/shop')
+    }
+  }
+
   return (
     <section className="relative overflow-hidden bg-cream pt-10 sm:pt-14 pb-0">
       <div className="absolute -top-10 -left-10 w-64 h-64 rounded-full bg-rose-light/50 blur-3xl" />
@@ -21,12 +40,12 @@ export default function Hero() {
             and sweet treats made with care for every family occasion.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-4">
-            <Link to="/menu" className="btn-primary">
+            <button onClick={handleOrderNow} className="btn-primary">
               Order Now
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
-            </Link>
+            </button>
             <Link to="/menu" className="btn-secondary">
               See Menu
             </Link>

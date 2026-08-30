@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { getCustomerSession, logoutCustomer } from '../utils/customerAuth'
 
-const navLinks = [
+const publicNavLinks = [
   { to: '/', label: 'Home' },
-  { to: '/menu', label: 'Cakes Menu' },
-  { to: '/track-order', label: 'Track Order' },
   { to: '/about', label: 'About Us' },
   { to: '/contact', label: 'Contact' },
+]
+
+const customerNavLinks = [
+  { to: '/', label: 'Home' },
+  { to: '/shop', label: 'Shop' },
+  { to: '/orders', label: 'My Orders' },
 ]
 
 export default function Navbar() {
@@ -15,8 +20,10 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [customerSession, setCustomerSession] = useState(getCustomerSession())
   const { itemCount } = useCart()
   const navigate = useNavigate()
+  const isLoggedIn = !!customerSession?.token
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -28,6 +35,12 @@ export default function Navbar() {
     setOpen(false)
   }, [navigate])
 
+  useEffect(() => {
+    const onAuthChanged = () => setCustomerSession(getCustomerSession())
+    window.addEventListener('customer-auth-changed', onAuthChanged)
+    return () => window.removeEventListener('customer-auth-changed', onAuthChanged)
+  }, [])
+
   const submitSearch = (e) => {
     e.preventDefault()
     if (query.trim()) {
@@ -36,6 +49,14 @@ export default function Navbar() {
       setQuery('')
     }
   }
+
+  const handleLogout = () => {
+    logoutCustomer()
+    navigate('/')
+    setOpen(false)
+  }
+
+  const navLinks = isLoggedIn ? customerNavLinks : publicNavLinks
 
   return (
     <header
@@ -79,26 +100,41 @@ export default function Navbar() {
             </svg>
           </button>
 
-          <Link
-            to="/cart"
-            aria-label="View cart"
-            className="relative w-10 h-10 rounded-full flex items-center justify-center text-cocoa hover:bg-cream-deep transition-colors duration-200"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="9" cy="21" r="1" />
-              <circle cx="20" cy="21" r="1" />
-              <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
-            </svg>
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-choc text-cream text-[10px] font-utility font-semibold w-5 h-5 rounded-full flex items-center justify-center animate-popIn">
-                {itemCount}
-              </span>
-            )}
-          </Link>
+          {isLoggedIn && (
+            <Link
+              to="/cart"
+              aria-label="View cart"
+              className="relative w-10 h-10 rounded-full flex items-center justify-center text-cocoa hover:bg-cream-deep transition-colors duration-200"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
+                <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6" />
+              </svg>
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-choc text-cream text-[10px] font-utility font-semibold w-5 h-5 rounded-full flex items-center justify-center animate-popIn">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+          )}
 
-          <Link to="/menu" className="hidden sm:inline-flex btn-primary !py-2.5 !px-5 text-sm">
-            Order Now
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <Link to="/profile" className="hidden sm:inline-flex btn-secondary !py-2.5 !px-5 text-sm">
+                Profile
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="hidden sm:inline-flex btn-secondary !py-2.5 !px-5 text-sm">
+                Login
+              </Link>
+              <Link to="/login" className="hidden sm:inline-flex btn-primary !py-2.5 !px-5 text-sm">
+                Sign Up
+              </Link>
+            </>
+          )}
 
           <button
             aria-label="Toggle menu"
@@ -152,9 +188,35 @@ export default function Navbar() {
                 {link.label}
               </NavLink>
             ))}
-            <Link to="/menu" className="btn-primary mt-4 w-full">
-              Order Now
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <NavLink
+                  to="/profile"
+                  className={({ isActive }) =>
+                    `py-3 px-2 rounded-lg font-body text-base border-b border-cream-line ${
+                      isActive ? 'text-choc font-semibold' : 'text-cocoa/80'
+                    }`
+                  }
+                >
+                  Profile
+                </NavLink>
+                <button
+                  onClick={handleLogout}
+                  className="py-3 px-2 rounded-lg font-body text-base text-cocoa/80 text-left hover:bg-cream-deep"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="btn-secondary mt-4 w-full">
+                  Login
+                </Link>
+                <Link to="/login" className="btn-primary mt-2 w-full">
+                  Sign Up
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       )}

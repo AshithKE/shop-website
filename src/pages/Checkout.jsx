@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { saveOrder } from '../utils/orderStorage'
+import { getCustomerSession } from '../utils/customerAuth'
 
 const BAKERY_WHATSAPP_NUMBER = '916363407808'
 
@@ -100,6 +101,29 @@ export default function Checkout() {
     })
   }
 
+  const submitOrderToServer = async (orderData) => {
+    const session = getCustomerSession()
+    const headers = {
+      'Content-Type': 'application/json',
+    }
+    if (session?.token) {
+      headers.Authorization = `Bearer ${session.token}`
+    }
+
+    const response = await fetch('http://localhost:5000/api/orders', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(orderData),
+    })
+
+    if (!response.ok && response.status === 401) {
+      navigate('/login?redirect=/checkout')
+      throw new Error('Session expired. Please login again.')
+    }
+
+    return response.json()
+  }
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault()
     if (!validate()) return
@@ -110,6 +134,27 @@ export default function Checkout() {
     try {
       if (paymentMethod === 'Dummy Payment' || paymentMethod === 'Cash on Delivery') {
         setPaymentStatus(paymentMethod === 'Dummy Payment' ? 'Paid' : 'Pending confirmation')
+        
+        const orderId = `PH-${Date.now().toString().slice(-6)}`
+        await submitOrderToServer({
+          orderId,
+          items,
+          subtotal,
+          deliveryFee,
+          total,
+          paymentMethod,
+          paymentStatus: paymentMethod === 'Dummy Payment' ? 'Paid' : 'Pending confirmation',
+          status: 'Confirmed',
+          customerName: form.name,
+          customerEmail: form.email,
+          customerPhone: form.phone,
+          address: form.address,
+          deliveryDate: form.deliveryDate,
+          deliveryTime: form.deliveryTime,
+          cakeMessage: form.cakeMessage,
+          notes: form.notes,
+        })
+
         finishOrder(paymentMethod, paymentMethod === 'Dummy Payment' ? 'Paid' : 'Pending confirmation')
         return
       }

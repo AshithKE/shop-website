@@ -5,6 +5,7 @@ import StarRating from '../components/StarRating'
 import ProductCard from '../components/ProductCard'
 import { useCart } from '../context/CartContext'
 import { useSocket } from '../context/SocketContext'
+import { getCustomerSession } from '../utils/customerAuth'
 
 export default function ProductDetails() {
   const { id } = useParams()
@@ -12,6 +13,7 @@ export default function ProductDetails() {
   const { addItem } = useCart()
   const { socket } = useSocket()
   const [liveProduct, setLiveProduct] = useState(() => getProductById(id))
+  const [isLoggedIn, setIsLoggedIn] = useState(!!getCustomerSession())
   const product = liveProduct || getProductById(id)
 
   useEffect(() => {
@@ -32,6 +34,12 @@ export default function ProductDetails() {
       socket.off('productDeleted', handleProductUpdate)
     }
   }, [id, socket])
+
+  useEffect(() => {
+    const onAuthChanged = () => setIsLoggedIn(!!getCustomerSession())
+    window.addEventListener('customer-auth-changed', onAuthChanged)
+    return () => window.removeEventListener('customer-auth-changed', onAuthChanged)
+  }, [])
 
   const [sizeId, setSizeId] = useState(product?.sizes[0]?.id)
   const [quantity, setQuantity] = useState(1)
@@ -62,6 +70,10 @@ export default function ProductDetails() {
   const selectedSize = product.sizes.find((s) => s.id === sizeId) || product.sizes[0]
 
   const handleAddToCart = () => {
+    if (!isLoggedIn) {
+      navigate('/login?redirect=/shop')
+      return
+    }
     addItem({
       productId: product.id,
       name: product.name,
