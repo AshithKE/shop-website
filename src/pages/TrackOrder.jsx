@@ -1,21 +1,55 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { getOrderById, formatCurrency, ORDER_STATUS_OPTIONS } from '../utils/orderStorage'
+import { formatCurrency, ORDER_STATUS_OPTIONS, getOrderById } from '../utils/orderStorage'
 import { useSocket } from '../context/SocketContext'
 
 export default function TrackOrder() {
   const [orderId, setOrderId] = useState('')
   const [searchedId, setSearchedId] = useState('')
+  const [order, setOrder] = useState(null)
+  const [loading, setLoading] = useState(false)
   const { socket } = useSocket()
-  const [refreshToken, setRefreshToken] = useState(0)
-  const order = useMemo(() => getOrderById(searchedId), [searchedId, refreshToken])
+
+  useEffect(() => {
+    if (!searchedId) {
+      setOrder(null)
+      return
+    }
+
+    let isActive = true
+    const loadCurrentOrder = async () => {
+      setLoading(true)
+      try {
+        const response = await fetch(`/api/orders/${encodeURIComponent(searchedId)}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (isActive) setOrder(data)
+          return
+        }
+
+        const localOrder = getOrderById(searchedId)
+        if (isActive) setOrder(localOrder)
+      } catch {
+        const localOrder = getOrderById(searchedId)
+        if (isActive) setOrder(localOrder)
+      } finally {
+        if (isActive) setLoading(false)
+      }
+    }
+
+    loadCurrentOrder()
+
+    return () => {
+      isActive = false
+    }
+  }, [searchedId])
 
   useEffect(() => {
     if (!socket || !searchedId) return
 
     const handleOrderUpdate = (updatedOrder) => {
       if (updatedOrder && updatedOrder.orderId === searchedId) {
-        setRefreshToken((value) => value + 1)
+        setOrder(updatedOrder)
       }
     }
 
@@ -56,6 +90,8 @@ export default function TrackOrder() {
           <div className="text-center py-16 text-cocoa/65">
             Enter your order ID to check the current status of your cake order.
           </div>
+        ) : loading ? (
+          <div className="text-center py-16 text-cocoa/65">Loading order details...</div>
         ) : !order ? (
           <div className="text-center py-16 text-cocoa/65">
             No order found for <span className="font-semibold text-choc">{searchedId}</span>.

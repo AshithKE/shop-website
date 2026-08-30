@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { getProducts, getCategories } from '../utils/adminStorage'
 import ProductCard from '../components/ProductCard'
 import CategoryFilter from '../components/CategoryFilter'
@@ -162,6 +162,9 @@ export default function Menu() {
                     <th className="px-5 py-4 text-sm font-semibold uppercase tracking-[0.12em] text-center">
                       1 KG
                     </th>
+                    <th className="px-5 py-4 text-sm font-semibold uppercase tracking-[0.12em] text-center">
+                      Order
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -176,9 +179,11 @@ export default function Menu() {
                       >
                         <td className="px-5 py-4 align-middle">
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-100 to-amber-100 flex items-center justify-center text-xl shadow-sm">
-                              🎂
-                            </div>
+                            <img
+                              src={p.image || 'https://images.unsplash.com/photo-1559620192-032c4bc4674e?auto=format&fit=crop&w=900&q=80'}
+                              alt={p.name}
+                              className="w-12 h-12 rounded-2xl object-cover shadow-sm"
+                            />
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-semibold text-cocoa">{p.name}</span>
@@ -189,6 +194,12 @@ export default function Menu() {
                                 )}
                               </div>
                               <p className="text-xs text-cocoa/55 mt-1">{p.description}</p>
+                              <Link
+                                to={`/product/${p.id}`}
+                                className="mt-2 inline-flex items-center rounded-full bg-choc px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-white transition hover:bg-cocoa"
+                              >
+                                Order
+                              </Link>
                             </div>
                           </div>
                         </td>
@@ -201,6 +212,14 @@ export default function Menu() {
                           <span className="inline-flex items-center justify-center rounded-full bg-choc px-3 py-1.5 text-sm font-semibold text-white shadow-sm">
                             ₹{oneKg?.price ?? p.price}
                           </span>
+                        </td>
+                        <td className="px-5 py-4 text-center align-middle">
+                          <Link
+                            to={`/product/${p.id}`}
+                            className="inline-flex items-center justify-center rounded-full border border-choc bg-white px-4 py-2 text-sm font-semibold text-choc hover:bg-rose-light transition"
+                          >
+                            Buy Now
+                          </Link>
                         </td>
                       </tr>
                     )

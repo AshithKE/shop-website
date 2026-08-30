@@ -1,5 +1,7 @@
 const CUSTOMER_SESSION_KEY = 'philo_customer_session'
-const API_BASE = 'http://localhost:5000'
+const API_BASE = import.meta.env.VITE_API_URL || ''
+
+const apiUrl = (path) => `${API_BASE}${path}`
 
 export function getCustomerSession() {
   try {
@@ -24,7 +26,7 @@ export function clearCustomerSession() {
 
 export async function registerCustomer(name, email, phone, password) {
   try {
-    const res = await fetch(`${API_BASE}/api/auth/register`, {
+    const res = await fetch(apiUrl('/api/auth/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, phone, password }),
@@ -42,7 +44,7 @@ export async function registerCustomer(name, email, phone, password) {
 
 export async function loginCustomer(email, password) {
   try {
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
+    const res = await fetch(apiUrl('/api/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -60,7 +62,7 @@ export async function loginCustomer(email, password) {
 
 export async function resetCustomerPassword(email, newPassword) {
   try {
-    const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+    const res = await fetch(apiUrl('/api/auth/reset-password'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, newPassword }),
@@ -83,7 +85,7 @@ export async function fetchCustomerProfile() {
   const session = getCustomerSession()
   if (!session?.token) return null
   try {
-    const res = await fetch(`${API_BASE}/api/customer/profile`, {
+    const res = await fetch(apiUrl('/api/customer/profile'), {
       headers: { Authorization: `Bearer ${session.token}` },
     })
     if (res.ok) return await res.json()
@@ -98,7 +100,7 @@ export async function fetchCustomerOrders() {
   const session = getCustomerSession()
   if (!session?.token) return []
   try {
-    const res = await fetch(`${API_BASE}/api/customer/orders`, {
+    const res = await fetch(apiUrl('/api/customer/orders'), {
       headers: { Authorization: `Bearer ${session.token}` },
     })
     if (res.ok) return await res.json()

@@ -45,7 +45,7 @@ export default function AdminDashboard() {
   const summary = useMemo(() => {
     const totalRevenue = orders.reduce((sum, order) => sum + Number(order.total || 0), 0)
     const pending = orders.filter((order) => (order.status || 'Pending') === 'Pending').length
-    const confirmed = orders.filter((order) => (order.status || 'Confirmed') === 'Confirmed').length
+    const confirmed = orders.filter((order) => ['Accepted', 'Confirmed'].includes(order.status || '')).length
     const preparing = orders.filter((order) => (order.status || 'Preparing') === 'Preparing').length
     const refunded = orders.filter((order) => (order.status || 'Refunded') === 'Refunded').length
     const lowStock = getLowStockProducts()

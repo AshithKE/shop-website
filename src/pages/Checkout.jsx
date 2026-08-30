@@ -86,7 +86,7 @@ export default function Checkout() {
       total,
       paymentMethod: orderMethod,
       paymentStatus: paymentState,
-      status: 'Confirmed',
+      status: 'Pending',
     })
 
     sessionStorage.setItem('sweetmoments_last_order', JSON.stringify(savedOrder))
@@ -110,7 +110,7 @@ export default function Checkout() {
       headers.Authorization = `Bearer ${session.token}`
     }
 
-    const response = await fetch('http://localhost:5000/api/orders', {
+    const response = await fetch('/api/orders', {
       method: 'POST',
       headers,
       body: JSON.stringify(orderData),
@@ -144,7 +144,7 @@ export default function Checkout() {
           total,
           paymentMethod,
           paymentStatus: paymentMethod === 'Dummy Payment' ? 'Paid' : 'Pending confirmation',
-          status: 'Confirmed',
+          status: 'Pending',
           customerName: form.name,
           customerEmail: form.email,
           customerPhone: form.phone,
@@ -251,7 +251,7 @@ export default function Checkout() {
               total,
               paymentMethod: 'Razorpay',
               paymentStatus: 'Paid',
-              status: 'Confirmed',
+              status: 'Pending',
               razorpayOrderId: razorpayResponse.razorpay_order_id,
               razorpayPaymentId: razorpayResponse.razorpay_payment_id,
               razorpaySignature: razorpayResponse.razorpay_signature,

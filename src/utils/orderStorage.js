@@ -2,10 +2,11 @@ const STORAGE_KEY = 'philo_orders_v1'
 
 export const ORDER_STATUS_OPTIONS = [
   'Pending',
-  'Confirmed',
+  'Accepted',
   'Preparing',
   'Out for delivery',
   'Delivered',
+  'Rejected',
 ]
 
 export const PAYMENT_METHODS = [
@@ -47,6 +48,21 @@ export function updateOrderStatus(orderId, status) {
   )
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+
+  if (typeof window !== 'undefined' && orderId) {
+    const selectedOrder = updated.find((order) => order.orderId === orderId)
+    fetch(`/api/orders/${encodeURIComponent(orderId)}/status`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status,
+        paymentStatus: selectedOrder?.paymentStatus || 'Pending',
+      }),
+    }).catch(() => {
+      // Ignore server sync failures and keep local order flow working.
+    })
+  }
+
   return updated
 }
 
@@ -61,7 +77,7 @@ export function getOrderSummary() {
   return {
     totalOrders: orders.length,
     pending: orders.filter((order) => order.status === 'Pending').length,
-    confirmed: orders.filter((order) => order.status === 'Confirmed').length,
+    confirmed: orders.filter((order) => ['Accepted', 'Confirmed'].includes(order.status || '')).length,
     preparing: orders.filter((order) => order.status === 'Preparing').length,
     delivered: orders.filter((order) => order.status === 'Delivered').length,
     totalRevenue,

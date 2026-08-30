@@ -7,5 +7,12 @@
     "passwordHash": "15e2b0d3c33891ebb0f1ef609ec419420c20e320ce94c65fbc8c3312448eb225",
     "createdAt": "2026-08-30T13:57:52.396Z",
     "token": "468821ddd6f999835f483cdb166f6d0a6922c214d62c555503b2eda3ab6cd46b"
+  },
+  {
+    "id": "customer_1788110625715",
+    "name": "ashi",
+    "email": "ashi@gmail.com",
+    "phone": "9632587417",
+    "password": "1234567890"
   }
 ]
